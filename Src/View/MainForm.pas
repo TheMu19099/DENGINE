@@ -7,8 +7,8 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, OpenGL, Math, UITypes, SyncObjs;
 
 const
-  WIDTH = 600;
-  HEIGHT = 480;
+  WIDTH = 800;
+  HEIGHT = 600;
   GRID_SPACING = 1;
   GRID_SIZE = 100;
   CameraSpeed = 0.1;
@@ -83,6 +83,12 @@ type
   public
     constructor Create(SleepTime: Integer); overload;
   end;
+
+type
+  TWGLSwapIntervalEXT = function(interval: Integer): BOOL; stdcall;
+
+var
+  wglSwapIntervalEXT: TWGLSwapIntervalEXT = nil;
 
 var
   frmMain: TfrmMain;
@@ -190,6 +196,10 @@ begin
   hRC := wglCreateContext(hDC);
   wglMakeCurrent(hDC, hRC);
 
+   @wglSwapIntervalEXT := wglGetProcAddress('wglSwapIntervalEXT');
+  if Assigned(wglSwapIntervalEXT) then
+    wglSwapIntervalEXT(1);
+
   // Configurar OpenGL
   glClearColor(0.0, 0.0, 0.0, 1.0); // Cor de fundo preta
   glViewport(0, 0, ClientWidth, ClientHeight); // Configurar o viewport
@@ -217,9 +227,10 @@ var
 begin
   // Limpar o buffer de cor e profundidade
     // Limpar o buffer de cor e profundidade
+  //glClearDepth(1.0);
+
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLoadIdentity;
-
 {$REGION 'Fundo cor e configuracao'}
   glClearColor(0.35, 0.35, 0.35, 1.0); // Cor cinza para o fundo
   glClear(GL_COLOR_BUFFER_BIT);
@@ -252,7 +263,7 @@ begin
   end;
 
   // Linhas no plano XZ
-  for i := -GRID_SIZE to GRID_SIZE do
+ { for i := -GRID_SIZE to GRID_SIZE do
   begin
     // Linhas horizontais no plano XZ
     glVertex3f(-GRID_SIZE * GRID_SPACING, i * GRID_SPACING, 0.0);
@@ -261,10 +272,10 @@ begin
     // Linhas verticais no plano XZ
     glVertex3f(i * GRID_SPACING, -GRID_SIZE * GRID_SPACING, 0.0);
     glVertex3f(i * GRID_SPACING, GRID_SIZE * GRID_SPACING, 0.0);
-  end;
+  end;  }
 
   // Linhas no plano YZ
-  for i := -GRID_SIZE to GRID_SIZE do
+ { for i := -GRID_SIZE to GRID_SIZE do
   begin
     // Linhas verticais no plano YZ
     glVertex3f(0.0, -GRID_SIZE * GRID_SPACING, i * GRID_SPACING);
@@ -274,6 +285,7 @@ begin
     glVertex3f(0.0, i * GRID_SPACING, -GRID_SIZE * GRID_SPACING);
     glVertex3f(0.0, i * GRID_SPACING, GRID_SIZE * GRID_SPACING);
   end;
+         }
 
   glEnd;
 {$ENDREGION}
@@ -323,7 +335,8 @@ begin
     end;
   end;
   glEnd;
-  glClearDepth(1.0);
+  SwapBuffers(hDC);
+
 {$ENDREGION}
 end;
 procedure TfrmMain.MouseMoveHandler(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -340,7 +353,7 @@ begin
     LastMouseX := X;
     LastMouseY := Y;
 
-    Invalidate; // Solicitar atualização da tela
+    //Invalidate; // Solicitar atualização da tela
   end
   else
   begin
@@ -378,7 +391,7 @@ begin
     VK_LEFT,vkA: CameraPos := CameraPos - (CameraDir.Cross(CameraUp)).Normalize * MoveSpeed;
     VK_RIGHT,vkD: CameraPos := CameraPos + (CameraDir.Cross(CameraUp)).Normalize * MoveSpeed;
   end;
-  Invalidate; // Solicitar atualização da tela
+  //Invalidate; // Solicitar atualização da tela
 end;
 
 procedure TfrmMain.UpdateCamera;
@@ -459,7 +472,7 @@ end;
 procedure TfrmMain.DrawFrame;
 begin
   RenderRayTracedScene;
-  SwapBuffers(hDC);
+
 end;
 
 { TRenderCameraThread }
