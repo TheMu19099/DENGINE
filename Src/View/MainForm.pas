@@ -60,6 +60,8 @@ type
     function RaySphereIntersection(const origin, dir, spherePos: TVector3; sphereRadius: Single; out t: Single): Boolean;
     procedure UpdateCamera; // Atualiza a câmera
 
+    procedure DrawSphere(radius: Single; slices: Integer; stacks: Integer);
+
     procedure MouseMoveHandler(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure MouseDownHandler(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure MouseUpHandler(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -295,8 +297,8 @@ begin
   lightPos := TVector3.Create(5, 5, 10); // Ajustar a posição da luz
 {$ENDREGION}
 {$REGION 'Renderizacao pixel a pixel'}
-  glBegin(GL_POINTS);
-  for y := 0 to HEIGHT - 1 do
+  //glBegin(GL_POINTS);
+ { for y := 0 to HEIGHT - 1 do
   begin
     for x := 0 to WIDTH - 1 do
     begin
@@ -333,12 +335,71 @@ begin
         glVertex2i(x - WIDTH div 2, y - HEIGHT div 2); // Ajustar a posição do pixel
       end;
     end;
-  end;
-  glEnd;
+  end;  }
+
+ // glEnd;
+  glColor3f(1.0, 0.0, 0.0); // Cor vermelha
+  DrawSphere(2.0, 30, 30);
+  //DrawSphere(-2.0, 30, 30);
   SwapBuffers(hDC);
 
 {$ENDREGION}
 end;
+procedure TfrmMain.DrawSphere(radius: Single; slices: Integer; stacks: Integer);
+var
+  i, j: Integer;
+  theta, phi: Single;
+  theta1, phi1: Single;
+  x, y, z: Single;
+  x1, y1, z1: Single;
+  x2, y2, z2: Single;
+  x3, y3, z3: Single;
+begin
+  glBegin(GL_TRIANGLES);
+  for i := 0 to stacks - 1 do
+  begin
+    phi := Pi * (i / stacks); // Latitude atual
+    phi1 := Pi * ((i + 1) / stacks); // Latitude da próxima
+
+    for j := 0 to slices - 1 do
+    begin
+      theta := 2 * Pi * (j / slices); // Longitude atual
+      theta1 := 2 * Pi * ((j + 1) / slices); // Longitude da próxima
+
+      // Ponto 1
+      x := radius * Sin(phi) * Cos(theta);
+      y := radius * Cos(phi);
+      z := radius * Sin(phi) * Sin(theta);
+
+      // Ponto 2
+      x1 := radius * Sin(phi1) * Cos(theta);
+      y1 := radius * Cos(phi1);
+      z1 := radius * Sin(phi1) * Sin(theta);
+
+      // Ponto 3
+      x2 := radius * Sin(phi1) * Cos(theta1);
+      y2 := radius * Cos(phi1);
+      z2 := radius * Sin(phi1) * Sin(theta1);
+
+      // Ponto 4
+      x3 := radius * Sin(phi) * Cos(theta1);
+      y3 := radius * Cos(phi);
+      z3 := radius * Sin(phi) * Sin(theta1);
+
+      // Triângulo 1
+      glVertex3f(x, y, z);
+      glVertex3f(x1, y1, z1);
+      glVertex3f(x2, y2, z2);
+
+      // Triângulo 2
+      glVertex3f(x, y, z);
+      glVertex3f(x2, y2, z2);
+      glVertex3f(x3, y3, z3);
+    end;
+  end;
+  glEnd;
+end;
+
 procedure TfrmMain.MouseMoveHandler(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
   dx, dy: Single;
